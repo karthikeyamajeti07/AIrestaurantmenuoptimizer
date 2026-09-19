@@ -32,7 +32,25 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
   const [menuText, setMenuText] = useState('');
   const [inputMode, setInputMode] = useState<'file' | 'text'>('file');
   const [restaurantName, setRestaurantName] = useState('');
+  const [fileError, setFileError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const acceptFile = (candidate: File) => {
+    const allowedTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/webp'];
+    const allowedExtensions = ['.pdf', '.png', '.jpg', '.jpeg', '.webp'];
+    const extension = candidate.name.slice(candidate.name.lastIndexOf('.')).toLowerCase();
+
+    if ((!allowedTypes.includes(candidate.type) && !allowedExtensions.includes(extension)) || candidate.size > 25 * 1024 * 1024) {
+      setFileError('Choose a PDF, PNG, JPG, or WebP file smaller than 25 MB.');
+      setSelectedFile(null);
+      setFile(null);
+      return;
+    }
+
+    setFileError(null);
+    setSelectedFile(candidate.name);
+    setFile(candidate);
+  };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -48,22 +66,19 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
     e.preventDefault();
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const file = e.dataTransfer.files[0];
-      setSelectedFile(file.name);
-      setFile(file);
+      acceptFile(e.dataTransfer.files[0]);
     }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const selected = e.target.files[0];
-      setSelectedFile(selected.name);
-      setFile(selected);
+      acceptFile(e.target.files[0]);
     }
   };
 
   const handleUseSample = () => {
     setInputMode('text');
+    setRestaurantName('Bella Italia');
     setMenuText('APPETIZERS\nGarlic Bread - 145 - Toasted bread, garlic butter, and herbs\nFrench Fries - 125 - Crisp golden potatoes with sea salt\n\nSOUPS\nTomato Soup - 80 - Slow-simmered tomatoes with basil\nHot and Sour Soup - 90 - Wok-style broth with vegetables\n\nMAINS\nVeg Manchurian - 130 - Vegetable dumplings in a savory sauce');
     setSelectedFile(null);
     setFile(null);
@@ -101,6 +116,12 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
       {errorMessage && (
         <div className="rounded-lg border border-[#E5B9AD] bg-[#FFF3F0] px-4 py-3 text-xs text-[#8B3022]">
           <strong>Menu scan failed:</strong> {errorMessage}
+        </div>
+      )}
+
+      {fileError && (
+        <div role="alert" className="rounded-lg border border-[#E5B9AD] bg-[#FFF3F0] px-4 py-3 text-xs text-[#8B3022]">
+          {fileError}
         </div>
       )}
 
