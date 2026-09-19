@@ -1,7 +1,7 @@
 import { Menu, Dish, PricingOpportunity, MenuStrategyInsight } from '../types';
 import { INITIAL_MENU, PRICING_RECOMMENDATIONS, MENU_STRATEGY_INSIGHTS } from '../data/mockMenuData';
 
-const API_BASE = '/api';
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const token = localStorage.getItem('menuoptimizer_token');
