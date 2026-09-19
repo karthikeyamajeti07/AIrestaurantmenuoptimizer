@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String       @id @default(cuid())
+  email         String       @unique
+  name          String?
+  passwordHash  String
+  createdAt     DateTime     @default(now())
+  restaurants   Restaurant[]
+}
+
+model Restaurant {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  cuisine     String?
+  location    String?
+  ownerId     String
+  owner       User     @relation(fields: [ownerId], references: [id])
+  menus       Menu[]
+  createdAt   DateTime @default(now())
+}
+
+model Menu {
+  id              String       @id @default(cuid())
+  title           String
+  restaurantId    String
+  restaurant      Restaurant   @relation(fields: [restaurantId], references: [id])
+  sourceType      String       @default("text")
+  sourceFileName  String?
+  status          String       @default("draft")
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  dishes          Dish[]
+  exports         MenuExport[]
+}
+
+model Dish {
+  id                   String             @id @default(cuid())
+  menuId               String
+  menu                 Menu               @relation(fields: [menuId], references: [id])
+  name                 String
+  category             String
+  price                Float
+  cost                 Float?
+  margin               Float?
+  isBestseller         Boolean            @default(false)
+  dietary              String[]
+  originalDescription  String
+  optimizedDescription String?
+  selectedDescriptionType String?
+  variants             DishVariant[]
+  suggestions          PricingSuggestion[]
+  insights             MenuInsight[]
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+}
+
+model DishVariant {
+  id          String   @id @default(cuid())
+  dishId      String
+  dish        Dish     @relation(fields: [dishId], references: [id])
+  type        String
+  label       String
+  description String
+  wordCount   Int
+  highlightWords String[]
+  createdAt   DateTime @default(now())
+}
+
+model PricingSuggestion {
+  id            String   @id @default(cuid())
+  dishId        String
+  dish          Dish     @relation(fields: [dishId], references: [id])
+  strategy      String
+  suggestion    Float
+  reasoning     String
+  impactScore   String
+  bundleDetails Json?
+  createdAt     DateTime @default(now())
+}
+
+model MenuInsight {
+  id            String   @id @default(cuid())
+  dishId        String?
+  dish          Dish?    @relation(fields: [dishId], references: [id])
+  category      String
+  title         String
+  subtitle      String?
+  impact        String?
+  recommendation String
+  actionLabel   String
+  status        String   @default("pending")
+  createdAt     DateTime @default(now())
+}
+
+model MenuExport {
+  id          String   @id @default(cuid())
+  menuId      String
+  menu        Menu     @relation(fields: [menuId], references: [id])
+  fileName    String
+  fileUrl     String?
+  createdAt   DateTime @default(now())
+}
